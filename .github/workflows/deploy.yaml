@@ -21,12 +21,44 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Normalize SSH target
+        id: ssh_target
+        env:
+          RAW_SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          RAW_SERVER_PORT: ${{ secrets.SERVER_PORT }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${RAW_SERVER_HOST}" ]; then
+            echo "SERVER_HOST secret is not set."
+            exit 1
+          fi
+
+          host="$(printf '%s' "${RAW_SERVER_HOST}" | sed -E 's~^[a-zA-Z]+://~~; s~/.*$~~; s~:[0-9]+$~~')"
+
+          if [ -z "${host}" ]; then
+            echo "SERVER_HOST secret does not contain a valid hostname or IP."
+            exit 1
+          fi
+
+          if [ -n "${RAW_SERVER_PORT}" ]; then
+            port="${RAW_SERVER_PORT}"
+          elif [[ "${RAW_SERVER_HOST}" =~ :([0-9]+)$ ]]; then
+            port="${BASH_REMATCH[1]}"
+          else
+            port="22"
+          fi
+
+          echo "host=${host}" >> "${GITHUB_OUTPUT}"
+          echo "port=${port}" >> "${GITHUB_OUTPUT}"
+
       - name: Deploy to server
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.SERVER_HOST }}
+          host: ${{ steps.ssh_target.outputs.host }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_KEY }}
+          port: ${{ steps.ssh_target.outputs.port }}
           script: |
             cd /root/telegram-joke-bot
             git pull origin main
