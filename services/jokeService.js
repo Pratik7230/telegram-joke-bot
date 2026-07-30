@@ -1,8 +1,7 @@
 const askAI = require("../config/ai");
 
 async function getJoke(language, category) {
-
-    const prompt = `
+  const prompt = `
 Generate ONE ${category} joke.
 
 Language: ${language}
@@ -15,7 +14,7 @@ Rules:
 - Emoji allowed
 `;
 
-    return await askAI(prompt);
+  return await askAI(prompt);
 }
 
 module.exports = getJoke;
