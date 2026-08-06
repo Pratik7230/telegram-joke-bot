@@ -10,20 +10,31 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Deploy to VM
         uses: appleboy/ssh-action@v1.2.2
+
         with:
           host: ${{ secrets.VM_HOST }}
           username: ${{ secrets.VM_USER }}
-          password: ${{ secrets.VM_PASSWORD }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.VM_PORT }}
+
           script: |
+            set -e
+
             cd /telegram-joke-bot
 
-            git pull origin main
+            git fetch origin
 
-            npm install
+            git reset --hard origin/main
 
-            pm2 restart telegram-joke-bot || pm2 start index.js --name telegram-joke-bot
+            docker compose down || true
 
-            pm2 save
+            docker compose build --no-cache
+
+            docker compose up -d
+
+            docker image prune -f
