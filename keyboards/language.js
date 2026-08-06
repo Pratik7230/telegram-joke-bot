@@ -13,4 +13,8 @@ module.exports = Markup.inlineKeyboard([
     Markup.button.callback("🇫🇷 French", "lang_French"),
     Markup.button.callback("🇩🇪 German", "lang_German"),
   ],
+  [
+    Markup.button.callback("🇪🇸 Spanish", "lang_Spanish"),
+    Markup.button.callback("🇨🇳 Chinese", "lang_Chinese"),
+  ],
 ]);
