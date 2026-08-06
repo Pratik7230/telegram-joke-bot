@@ -1,0 +1,4 @@
+#Rename env_sample to .env and add your bot token and nvidia api key in it.
+
+BOT_TOKEN=
+NVIDIA_API_KEY=

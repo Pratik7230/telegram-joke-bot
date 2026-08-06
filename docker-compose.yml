@@ -1,0 +1,10 @@
+services:
+  telegram-joke-bot:
+    build: .
+
+    container_name: telegram-joke-bot
+
+    restart: always
+
+    env_file:
+      - .env
