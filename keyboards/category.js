@@ -17,5 +17,9 @@ module.exports = Markup.inlineKeyboard([
     Markup.button.callback("🤣 Knock Knock", "cat_knock"),
     Markup.button.callback("⚡ One-Liner", "cat_one"),
   ],
+  [
+    Markup.button.callback("🍕 Food", "cat_food"),
+    Markup.button.callback("🏢 Office", "cat_office"),
+  ],
   [Markup.button.callback("🌐 Change Language", "change_lang")],
 ]);
