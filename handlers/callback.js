@@ -2,6 +2,7 @@ const users = require("../utils/userState");
 const categoryKeyboard = require("../keyboards/category");
 const languageKeyboard = require("../keyboards/language");
 const getJoke = require("../services/jokeService");
+const User = require("../models/User");
 
 const jokeExpiryTimers = new Map();
 
@@ -54,12 +55,36 @@ const jokeActionsKeyboard = (category) => ({
 });
 
 module.exports = (bot) => {
-  bot.action(/^lang_(.+)$/, async (ctx) => {
-    clearJokeExpiry(ctx);
-    await ctx.answerCbQuery();
-    users[ctx.from.id] = { language: ctx.match[1] };
+  bot.action(/^lang_(.+)/, async (ctx) => {
 
-    await ctx.editMessageText("Choose a joke category.", categoryKeyboard);
+    const language = ctx.match[1];
+
+    await User.findOneAndUpdate(
+      {
+        telegramId: ctx.from.id
+      },
+      {
+        telegramId: ctx.from.id,
+        username: ctx.from.username || null,
+        firstName: ctx.from.first_name || null,
+        lastName: ctx.from.last_name || null,
+        language: language,
+        lastSeen: new Date()
+      },
+      {
+        upsert: true,
+        new: true
+      }
+    );
+
+    users[ctx.from.id] = {
+      language: language
+    };
+
+    await ctx.editMessageText(
+      "Choose a joke category.",
+      categoryKeyboard
+    );
   });
 
   bot.action("change_lang", async (ctx) => {
@@ -68,16 +93,73 @@ module.exports = (bot) => {
     await ctx.editMessageText("Select your language.", languageKeyboard);
   });
 
-  bot.action(/^cat_(.+)$/, async (ctx) => {
-    clearJokeExpiry(ctx);
-    const category = ctx.match[1];
-    const language = users[ctx.from.id]?.language || "English";
+  bot.action(/^cat_(.+)/, async (ctx) => {
+    try {
+      const category = ctx.match[1];
 
-    await ctx.answerCbQuery("Generating...");
+      const language =
+        users[ctx.from.id]?.language || "English";
 
-    const joke = await getJoke(language, category);
-    await ctx.editMessageText(joke, jokeActionsKeyboard(category));
-    expireJokeAfterOneMinute(ctx);
+      await ctx.answerCbQuery("Generating joke...");
+
+      const joke = await getJoke(language, category);
+
+      // Update user statistics
+      await User.findOneAndUpdate(
+        {
+          telegramId: ctx.from.id
+        },
+        {
+          $set: {
+            username: ctx.from.username || null,
+            firstName: ctx.from.first_name || null,
+            lastName: ctx.from.last_name || null,
+            lastSeen: new Date(),
+            favoriteCategory: category
+          },
+          $inc: {
+            jokeCount: 1
+          }
+        },
+        {
+          upsert: true,
+          returnDocument: "after"
+        }
+      );
+
+      await ctx.editMessageText(
+        joke,
+        {
+          reply_markup: {
+            inline_keyboard: [
+              [
+                {
+                  text: "😂 Another",
+                  callback_data: `cat_${category}`
+                }
+              ],
+              [
+                {
+                  text: "📂 Categories",
+                  callback_data: "show_categories"
+                },
+                {
+                  text: "🌐 Language",
+                  callback_data: "change_lang"
+                }
+              ]
+            ]
+          }
+        }
+      );
+
+    } catch (error) {
+      console.error("Joke generation error:", error);
+
+      await ctx.reply(
+        "❌ Sorry, something went wrong while generating the joke."
+      );
+    }
   });
 
   bot.action("show_categories", async (ctx) => {
