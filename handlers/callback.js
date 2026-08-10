@@ -2,6 +2,7 @@ const users = require("../utils/userState");
 const categoryKeyboard = require("../keyboards/category");
 const languageKeyboard = require("../keyboards/language");
 const getJoke = require("../services/jokeService");
+const User = require("../models/User");
 
 const jokeExpiryTimers = new Map();
 
@@ -54,12 +55,36 @@ const jokeActionsKeyboard = (category) => ({
 });
 
 module.exports = (bot) => {
-  bot.action(/^lang_(.+)$/, async (ctx) => {
-    clearJokeExpiry(ctx);
-    await ctx.answerCbQuery();
-    users[ctx.from.id] = { language: ctx.match[1] };
+  bot.action(/^lang_(.+)/, async (ctx) => {
 
-    await ctx.editMessageText("Choose a joke category.", categoryKeyboard);
+    const language = ctx.match[1];
+
+    await User.findOneAndUpdate(
+      {
+        telegramId: ctx.from.id
+      },
+      {
+        telegramId: ctx.from.id,
+        username: ctx.from.username || null,
+        firstName: ctx.from.first_name || null,
+        lastName: ctx.from.last_name || null,
+        language: language,
+        lastSeen: new Date()
+      },
+      {
+        upsert: true,
+        new: true
+      }
+    );
+
+    users[ctx.from.id] = {
+      language: language
+    };
+
+    await ctx.editMessageText(
+      "Choose a joke category.",
+      categoryKeyboard
+    );
   });
 
   bot.action("change_lang", async (ctx) => {

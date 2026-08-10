@@ -2,3 +2,4 @@
 
 BOT_TOKEN=
 NVIDIA_API_KEY=
+MONGO_URI=mongodb+srv://jokebot:YOUR_PASSWORD@cluster0.xxxxx.mongodb.net/jokebot?retryWrites=true&w=majority
