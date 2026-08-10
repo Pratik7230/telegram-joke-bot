@@ -8,6 +8,7 @@ const bot = new Telegraf(process.env.BOT_TOKEN);
 
 require("./handlers/start")(bot);
 require("./handlers/callback")(bot);
+require("./handlers/admin")(bot);
 
 async function start() {
     await connectDatabase();
