@@ -73,7 +73,7 @@ module.exports = (bot) => {
       },
       {
         upsert: true,
-        new: true
+        returnDocument: "after"
       }
     );
 
@@ -154,6 +154,10 @@ module.exports = (bot) => {
       );
 
     } catch (error) {
+      if (error.description && error.description.includes("message is not modified")) {
+        // Ignore error if the newly generated joke happens to be exactly the same
+        return;
+      }
       console.error("Joke generation error:", error);
 
       await ctx.reply(

@@ -2,16 +2,16 @@ const axios = require("axios");
 
 async function askAI(prompt) {
   const response = await axios.post(
-    "https://integrate.api.nvidia.com/v1/chat/completions",
+    "https://codecraftapi.com/v1/chat/completions",
     {
-      model: "meta/llama-3.2-11b-vision-instruct",
+      model: "deepseek-v4-flash-0731",
       messages: [{ role: "user", content: prompt }],
       temperature: 0.9,
       max_tokens: 150,
     },
     {
       headers: {
-        Authorization: `Bearer ${process.env.NVIDIA_API_KEY}`,
+        Authorization: `Bearer ${process.env.CODECRAFT_API_KEY}`,
         "Content-Type": "application/json",
       },
     },
